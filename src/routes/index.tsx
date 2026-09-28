@@ -171,55 +171,46 @@ function PaginaLogin() {
                   {modo === "cadastrar" && (
                     <div className="space-y-2">
                       <Label htmlFor="nome">Nome</Label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="nome"
-                          name="name"
-                          required
-                          autoComplete="name"
-                          className="pl-11"
-                          value={nome}
-                          onChange={(e) => setNome(e.target.value)}
-                          placeholder="Seu nome"
-                        />
-                      </div>
+                      <Input
+                        icone={<User />}
+                        id="nome"
+                        name="name"
+                        required
+                        autoComplete="name"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                        placeholder="Seu nome"
+                      />
                     </div>
                   )}
                   <div className="space-y-2">
                     <Label htmlFor="email">E-mail</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        autoComplete="email"
-                        className="pl-11"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="voce@empresa.com.br"
-                      />
-                    </div>
+                    <Input
+                      icone={<Mail />}
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="voce@empresa.com.br"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="senha">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-3.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="senha"
-                        name="password"
-                        type="password"
-                        required
-                        minLength={6}
-                        autoComplete={modo === "entrar" ? "current-password" : "new-password"}
-                        className="pl-11"
-                        value={senha}
-                        onChange={(e) => setSenha(e.target.value)}
-                        placeholder="Mínimo de 6 caracteres"
-                      />
-                    </div>
+                    <Input
+                      icone={<Lock />}
+                      id="senha"
+                      name="password"
+                      type="password"
+                      required
+                      minLength={6}
+                      autoComplete={modo === "entrar" ? "current-password" : "new-password"}
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      placeholder="Mínimo de 6 caracteres"
+                    />
                   </div>
                   <Button type="submit" className="w-full" disabled={carregando}>
                     {carregando && <Loader2 className="size-4 animate-spin" />}

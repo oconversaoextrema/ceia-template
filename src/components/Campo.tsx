@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 
+// Caixa e tracking vêm do escopo: versalete fora do `.ds-app`, minúscula dentro.
+const ROTULO =
+  "block text-xs font-medium text-muted-foreground [text-transform:var(--ds-label-transform)] [letter-spacing:var(--ds-label-tracking)]";
+
 /** Rótulo + campo, com dica opcional embaixo. */
 export function Campo({
   rotulo,
@@ -15,11 +19,11 @@ export function Campo({
   return (
     <div className="space-y-1.5">
       {htmlFor ? (
-        <label htmlFor={htmlFor} className="block text-label-md text-foreground">
+        <label htmlFor={htmlFor} className={ROTULO}>
           {rotulo}
         </label>
       ) : (
-        <span className="block text-label-md text-foreground">{rotulo}</span>
+        <span className={ROTULO}>{rotulo}</span>
       )}
       {children}
       {dica && <p className="text-caption text-muted-foreground">{dica}</p>}
