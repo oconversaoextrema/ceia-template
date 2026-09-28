@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ControleSegmentado } from "@/components/ControleSegmentado";
 import { EstadoVazio, PageHeader } from "@/components/PageHeader";
 import { SkeletonTabela } from "@/components/Skeletons";
 import { usePerfil } from "@/features/perfil/api";
@@ -30,6 +31,14 @@ export const Route = createFileRoute("/_authenticated/anotacoes")({
   component: PaginaAnotacoes,
 });
 
+type Filtro = "todas" | "minhas" | "organizacao";
+
+const FILTROS = [
+  { valor: "todas", rotulo: "Todas" },
+  { valor: "minhas", rotulo: "Minhas" },
+  { valor: "organizacao", rotulo: "Da organização" },
+] as const;
+
 /** Estado do Dialog: fechado, criando (null) ou editando um registro. */
 type Edicao =
   { aberto: false } | { aberto: true; anotacao: AnotacaoComAutor | null; chave: number };
@@ -40,12 +49,20 @@ function PaginaAnotacoes() {
   const excluir = useExcluirAnotacao();
   const [edicao, setEdicao] = useState<Edicao>({ aberto: false });
   const [paraExcluir, setParaExcluir] = useState<AnotacaoComAutor | null>(null);
+  const [filtro, setFiltro] = useState<Filtro>("todas");
 
   // O layout (`GarantirPerfil`) só renderiza a página com o perfil carregado.
   const autoria: Autoria = {
     userId: ctx?.perfil?.id ?? "",
     organizacaoId: ctx?.organizacao?.id ?? null,
   };
+
+  const filtradas = useMemo(() => {
+    const todas = lista.data ?? [];
+    if (filtro === "minhas") return todas.filter((a) => a.user_id === autoria.userId);
+    if (filtro === "organizacao") return todas.filter((a) => a.organizacao_id !== null);
+    return todas;
+  }, [lista.data, filtro, autoria.userId]);
 
   const abrir = (anotacao: AnotacaoComAutor | null) =>
     setEdicao({ aberto: true, anotacao, chave: Date.now() });
@@ -95,12 +112,20 @@ function PaginaAnotacoes() {
           acao={botaoNova}
         />
       ) : (
-        <TabelaAnotacoes
-          anotacoes={lista.data}
-          meuId={autoria.userId}
-          aoEditar={abrir}
-          aoExcluir={setParaExcluir}
-        />
+        <div className="space-y-4">
+          <ControleSegmentado
+            opcoes={FILTROS}
+            valor={filtro}
+            aoMudar={setFiltro}
+            rotuloAria="Filtrar anotações"
+          />
+          <TabelaAnotacoes
+            anotacoes={filtradas}
+            meuId={autoria.userId}
+            aoEditar={abrir}
+            aoExcluir={setParaExcluir}
+          />
+        </div>
       )}
 
       {edicao.aberto && (
