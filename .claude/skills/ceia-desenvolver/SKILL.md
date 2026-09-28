@@ -109,15 +109,51 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
 
 ## 5. Regras do design system
 
+Versão do DS aplicada em `DS_VERSION`.
+
 - **Tokens, nunca cor fixa**: `bg-background`, `bg-card`, `text-foreground`,
   `text-muted-foreground`, `border-border`, `bg-primary`, `text-destructive`… Nada de
   `bg-white`, `text-gray-500`, hex ou `dark:` com cor fixa: os tokens já trocam no tema escuro.
-- **Escala tipográfica**: `text-heading-{xl,lg,md,sm}`, `text-body-{xl,lg,md,sm}`,
-  `text-label-{lg,md}`, `text-caption`, `text-eyebrow`. Dentro de `.ds-app` (área logada) a
-  escala é um degrau menor.
+- **Escala tipográfica**: `text-display-{2xl,xl,lg}` (só hero, nunca em tela de sistema),
+  `text-heading-{xl,lg,md,sm}`, `text-body-{xl,lg,md,sm}`, `text-label-{lg,md}`, `text-caption`,
+  `text-eyebrow`, `text-code`. Token novo de tamanho entra também na lista do `cn` em
+  `src/lib/utils.ts`, senão o `cn` o descarta ao lado de uma cor.
+- **Escopo antes de `className`**: `.ds-app` (no `main` da área logada) reaponta raio, tipografia
+  (um degrau menor) e campo (`--ds-input-*`: 36 px, canto discreto). Corrigir raio ou tamanho
+  card a card é sinal de escopo faltando.
+- **Tracking**: `tracking-label` (0.04em) em rótulo de formulário, cabeçalho de tabela e etiqueta
+  de UI. `tracking-eyebrow` (0.14em) é decoração de marketing: fora de tela de sistema.
 - **Feedback soft/deep**: fundo suave + texto forte (`bg-success-soft text-success`,
-  `bg-warning-soft text-warning`, `bg-destructive-soft text-destructive`,
+  `bg-warning-soft text-warning`, `bg-destructive-soft text-danger-deep`,
   `bg-info-soft text-info`) ou as variantes de `Badge` (`success`, `warning`, `danger`, `info`).
+- **Badge de estado ≠ identidade**: os tons de estado significam bom/ruim (status de linha).
+  Categoria, plano ou tipo usa `secondary`/`outline` ou a cor de gráfico da entidade.
+- **Escolha única**: 2 a 4 opções curtas, todas à vista → controle segmentado (`Tabs` ou
+  `ToggleGroup`). 5 ou mais, rótulo longo ou lista que cresce → `Select`.
+- **Período**: preset (7/14/30 dias) e intervalo de datas são um estado só. O intervalo é a fonte
+  da verdade; o preset escreve nele e só aparece marcado quando coincide.
+- **Filtro muda a tela inteira**: gráfico, indicadores e tabela se refazem contra a mesma fatia.
+  Controle que muda de estado e não muda a tela não entra.
+- **Número com variação**: `CartaoMetrica` com `delta` (número com sinal) e
+  `melhorQuandoSobe={false}` quando cair é a boa notícia (reembolso, custo, churn). A seta vem do
+  sinal, a cor de sinal × sentido; nunca um booleano só para as duas.
+- **Delta com base nomeada**: sempre com `comparacao` ("vs. mês anterior") e contra uma janela
+  anterior completa. Sem base ou com janela incompleta, sem delta (e sem a legenda "vs. …").
+- **Tabela ordena pelo dado**: quando a célula é montada de outro campo (moeda, "dd/mm",
+  "Hoje"/"Ontem"), ordene pelo valor bruto. Coluna de valor alinhada à direita com
+  `tabular-nums`; total em `TableFooter` (`<tfoot>`), parado quando a ordem muda; zero repetido
+  vira "–" em `text-faint`; coluna que duplica outra sai.
+- **Trilha derivada da navegação**: a do `AppHeader` sai de `montarTrilha` (`NAV`); nunca
+  escreva trilha à mão numa tela. Item intermediário sem tela própria sai como texto.
+- **Gráfico**: a cor segue a entidade, nunca o ranking (`--chart-1..3` em ordem fixa; filtrar não
+  repinta as séries que sobram). Uma quarta série vira "Outros" ou facetas. Com 2+ séries a legenda
+  está sempre presente. Nunca eixo duplo: medidas de grandeza diferente viram dois gráficos ou
+  índice sobre base comum. Texto do gráfico em token de texto, não na cor da série; eixo com passo
+  redondo; barra com teto de 24 px e canto só na ponta do dado; tooltip ao lado da marca; rótulo
+  direto só no ponto que o título cita; no hover realce a série, não esmaeça as outras.
+- **Superfície por contorno**: card comum com borda de 1 px, sem sombra projetada nem
+  preenchimento extra. Gradiente da marca (`text-brand-gradient`, `bg-brand-gradient`,
+  `fill-brand-gradient`) da esquerda para a direita e, em título, só no trecho destacado.
 - **Componentes**: `src/components/ui/*` (shadcn adaptado; 42 componentes) antes de criar
   qualquer coisa. Página começa com `PageHeader`; vazio e erro com `EstadoVazio`; carregamento
   com `Skeletons`/`SkeletonMetricas`; campo rotulado com `Campo`; número com `CartaoMetrica`.
