@@ -15,6 +15,9 @@ TanStack Start + TanStack Router (rotas por arquivo), React 19, TypeScript estri
 Supabase (Postgres, Auth e RLS) no plano gratuito. O build gera um Worker (Cloudflare): nenhum
 código de servidor usa API exclusiva do Node. Versão do template em `STARTER_VERSION`.
 
+O design system aplicado (`src/styles.css` e `src/components`) corresponde à versão 2.1.0 do
+design system Conversão Extrema, registrada em `DS_VERSION`.
+
 ## Como começar
 
 1. Troque `name` e `tagline` em `src/config/brand.ts`.
