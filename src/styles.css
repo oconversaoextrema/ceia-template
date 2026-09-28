@@ -125,6 +125,9 @@
 :root {
   /* Cromo nativo (calendário, select, rolagem) no tema certo */
   color-scheme: light;
+  /* Raio do ponto da DotGrid: menor no claro, para não competir com o conteúdo */
+  --dot-r: 0.75px;
+  --dot-r-fade: 1.2px;
   --radius: 0.75rem;
   --background: oklch(0.985 0 0); /* #fafafa canvas */
   --foreground: oklch(0.204 0 0); /* #171717 ink */
@@ -193,6 +196,8 @@
 
 .dark {
   color-scheme: dark;
+  --dot-r: 1px;
+  --dot-r-fade: 1.6px;
   --background: oklch(0.146 0 0); /* #0a0a0a canvas */
   --foreground: oklch(0.985 0 0); /* #fafafa ink */
   --card: oklch(0.204 0 0); /* #171717 surface */
@@ -545,7 +550,7 @@
   }
 
   /* Grade de pontos de fundo — página inteira, atrás de tudo.
-     Pontos de 0.75px centrados, malha de 24px. */
+     Raio do ponto temável (--dot-r/--dot-r-fade), malha de 24px. */
   .ds-dotgrid {
     position: fixed;
     inset: 0;
@@ -553,8 +558,8 @@
     pointer-events: none;
     background-image: radial-gradient(
       circle,
-      color-mix(in oklab, var(--foreground) 5%, transparent) 0.75px,
-      transparent 1.2px
+      color-mix(in oklab, var(--foreground) 5%, transparent) var(--dot-r),
+      transparent var(--dot-r-fade)
     );
     background-size: 24px 24px;
   }
@@ -568,8 +573,8 @@
     pointer-events: none;
     background-image: radial-gradient(
       circle,
-      color-mix(in oklab, var(--brand-from) 45%, transparent) 0.75px,
-      transparent 1.2px
+      color-mix(in oklab, var(--brand-from) 45%, transparent) var(--dot-r),
+      transparent var(--dot-r-fade)
     );
     background-size: 24px 24px;
     -webkit-mask-image: radial-gradient(
