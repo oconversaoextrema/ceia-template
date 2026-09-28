@@ -78,8 +78,9 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
    de `queryKey` por recurso (`["<feature>"]`), `useQuery` para leitura, `useMutation` que
    invalida a raiz, validação com zod e mensagens de erro em português.
 7. **Tela**: componentes em `src/features/<feature>/` e a rota em
-   `src/routes/_authenticated/<feature>.tsx`. Estados: `SkeletonTabela`/`SkeletonLista` ao
-   carregar, `EstadoVazio` para vazio e erro, toast de sucesso/erro, `Dialog` para formulário,
+   `src/routes/_authenticated/<feature>.tsx`. Lista com `Tabela` (ordenação por coluna) e filtro
+   curto com `ControleSegmentado`, como em `/anotacoes`. Estados: `SkeletonTabela`/`SkeletonLista`
+   ao carregar, `EstadoVazio` para vazio e erro, toast de sucesso/erro, `Dialog` para formulário,
    `AlertDialog` para excluir.
 8. **Menu**: uma entrada em `NAV` de `src/lib/navegacao.ts` e o href em `RotaNavEstatica`.
    Menu lateral e trilha saem dali.
@@ -118,45 +119,69 @@ Versão do DS aplicada em `DS_VERSION`.
   `text-heading-{xl,lg,md,sm}`, `text-body-{xl,lg,md,sm}`, `text-label-{lg,md}`, `text-caption`,
   `text-eyebrow`, `text-code`. Token novo de tamanho entra também na lista do `cn` em
   `src/lib/utils.ts`, senão o `cn` o descarta ao lado de uma cor.
-- **Escopo antes de `className`**: `.ds-app` (no `main` da área logada) reaponta raio, tipografia
-  (um degrau menor) e campo (`--ds-input-*`: 36 px, canto discreto). Corrigir raio ou tamanho
+- **Escopo antes de `className`**: `.ds-app` (na raiz do `AppLayout` e no `body` enquanto ele está
+  montado, para alcançar Dialog, Sheet e Popover) reaponta raio, tipografia (um degrau menor),
+  campo (`--ds-input-*`: 36 px, canto `md`) e rótulo (`--ds-label-*`: minúscula, sem tracking).
+  Fora dele (login) o campo é pílula de 44 px e o rótulo é versalete. Corrigir raio ou tamanho
   card a card é sinal de escopo faltando.
+- **Campos**: `Input`, `Textarea`, `SelectTrigger` e `CampoData` já leem `--ds-input-*`; não
+  fixe `h-*`, `rounded-*` nem `px-*` neles. Ícone à esquerda pela prop `icone` do `Input`, nunca
+  com `pl-*` e ícone absoluto na mão. `Label` e `Campo` seguem `--ds-label-*`.
+- **Ícones**: a biblioteca de ícones deste template é lucide; Phosphor não entra. A regra de
+  `weight` do DS não se aplica: o equivalente ao `regular` é `strokeWidth` 1.5 (padrão) a 2
+  (ativo/ênfase), em 16 a 20 px.
+- **Botões** (sempre pílula; `size="default"` e `size="field"` têm a altura do campo do escopo):
+  `default` (pílula `inverse`) é a ação principal da tela ou do formulário; `secondary`
+  (`outline` é o mesmo visual) é a ação alternativa ao lado dela, como Cancelar ou Tentar de
+  novo; `ghost` é ação de linha, de ícone ou de barra de ferramentas; `shiny` (ou `shiny-brand`)
+  é o CTA de destaque, no máximo um por tela; `destructive` confirma exclusão; `link` é navegação
+  dentro de texto. `bg-brand-gradient` não é fundo de botão: fica para selos e checks.
 - **Tracking**: `tracking-label` (0.04em) em rótulo de formulário, cabeçalho de tabela e etiqueta
   de UI. `tracking-eyebrow` (0.14em) é decoração de marketing: fora de tela de sistema.
+- **Nomes de feedback**: no template `text-success`, `text-warning`, `text-danger` e `text-info`
+  já são a cor de texto (o `-deep` do DS); `bg-*-soft` é o fundo. Os `text-*-deep` existem só como
+  apelido do mesmo valor: prefira o nome curto.
 - **Feedback soft/deep**: fundo suave + texto forte (`bg-success-soft text-success`,
-  `bg-warning-soft text-warning`, `bg-destructive-soft text-danger-deep`,
+  `bg-warning-soft text-warning`, `bg-destructive-soft text-danger`,
   `bg-info-soft text-info`) ou as variantes de `Badge` (`success`, `warning`, `danger`, `info`).
 - **Badge de estado ≠ identidade**: os tons de estado significam bom/ruim (status de linha).
   Categoria, plano ou tipo usa `secondary`/`outline` ou a cor de gráfico da entidade.
-- **Escolha única**: 2 a 4 opções curtas, todas à vista → controle segmentado (`Tabs` ou
-  `ToggleGroup`). 5 ou mais, rótulo longo ou lista que cresce → `Select`.
-- **Período**: preset (7/14/30 dias) e intervalo de datas são um estado só. O intervalo é a fonte
-  da verdade; o preset escreve nele e só aparece marcado quando coincide.
+- **Escolha única**: 2 a 4 opções curtas, todas à vista → `ControleSegmentado`. 5 ou mais,
+  rótulo longo ou lista que cresce → `Select`. `Tabs` só troca de painel, não filtra.
+- **Período**: preset (7/14/30 dias, em `ControleSegmentado`) e intervalo (`IntervaloDatas`) são
+  um estado só. O intervalo é a fonte da verdade; o preset escreve nele e só aparece marcado
+  quando coincide. Data solta: `CampoData` (nativo, valor em ISO).
 - **Filtro muda a tela inteira**: gráfico, indicadores e tabela se refazem contra a mesma fatia.
   Controle que muda de estado e não muda a tela não entra.
-- **Número com variação**: `CartaoMetrica` com `delta` (número com sinal) e
+- **Número com variação**: `CartaoMetrica` quando há delta e base de comparação; número de apoio
+  sem variação não vira `CartaoMetrica`. Use `delta` (número com sinal) e
   `melhorQuandoSobe={false}` quando cair é a boa notícia (reembolso, custo, churn). A seta vem do
   sinal, a cor de sinal × sentido; nunca um booleano só para as duas.
 - **Delta com base nomeada**: sempre com `comparacao` ("vs. mês anterior") e contra uma janela
   anterior completa. Sem base ou com janela incompleta, sem delta (e sem a legenda "vs. …").
-- **Tabela ordena pelo dado**: quando a célula é montada de outro campo (moeda, "dd/mm",
-  "Hoje"/"Ontem"), ordene pelo valor bruto. Coluna de valor alinhada à direita com
-  `tabular-nums`; total em `TableFooter` (`<tfoot>`), parado quando a ordem muda; zero repetido
-  vira "–" em `text-faint`; coluna que duplica outra sai.
+- **Tabela ordena pelo dado**: lista de dados usa `Tabela` (`colunas` + `linhas`); quando a
+  célula é montada de outro campo (moeda, "dd/mm", "Hoje"/"Ontem"), a coluna leva
+  `valorOrdenacao` com o valor bruto. `numerica` alinha à direita com `tabular-nums`; total no
+  `rodape` (`<tfoot>`), parado quando a ordem muda; zero e vazio viram "–" em `text-faint`
+  sozinhos; coluna que duplica outra sai. `ui/table` cru só para tabela sem dados (layout).
 - **Trilha derivada da navegação**: a do `AppHeader` sai de `montarTrilha` (`NAV`); nunca
   escreva trilha à mão numa tela. Item intermediário sem tela própria sai como texto.
-- **Gráfico**: a cor segue a entidade, nunca o ranking (`--chart-1..3` em ordem fixa; filtrar não
-  repinta as séries que sobram). Uma quarta série vira "Outros" ou facetas. Com 2+ séries a legenda
+- **Gráfico**: só existem `--chart-1..3`, `--meta` e `--google`. A cor segue a entidade, nunca o
+  ranking (`--chart-1..3` em ordem fixa; filtrar não repinta as séries que sobram). Uma quarta série vira "Outros" ou facetas. Com 2+ séries a legenda
   está sempre presente. Nunca eixo duplo: medidas de grandeza diferente viram dois gráficos ou
   índice sobre base comum. Texto do gráfico em token de texto, não na cor da série; eixo com passo
   redondo; barra com teto de 24 px e canto só na ponta do dado; tooltip ao lado da marca; rótulo
   direto só no ponto que o título cita; no hover realce a série, não esmaeça as outras.
-- **Superfície por contorno**: card comum com borda de 1 px, sem sombra projetada nem
-  preenchimento extra. Gradiente da marca (`text-brand-gradient`, `bg-brand-gradient`,
-  `fill-brand-gradient`) da esquerda para a direita e, em título, só no trecho destacado.
+- **Superfície por contorno**: `Card` com borda de 1 px, `rounded-xl` (vira 16 px no `.ds-app`),
+  fundo `surface` nos dois temas, sem sombra projetada, sem preenchimento extra e sem brilho de
+  borda no hover. `Badge` também sem sombra. Gradiente da marca (`text-brand-gradient`,
+  `bg-brand-gradient`, `fill-brand-gradient`) da esquerda para a direita e, em título, só no
+  trecho destacado.
 - **Componentes**: `src/components/ui/*` (shadcn adaptado; 42 componentes) antes de criar
   qualquer coisa. Página começa com `PageHeader`; vazio e erro com `EstadoVazio`; carregamento
-  com `Skeletons`/`SkeletonMetricas`; campo rotulado com `Campo`; número com `CartaoMetrica`.
+  com `Skeletons`/`SkeletonMetricas`; campo rotulado com `Campo`; número com `CartaoMetrica`;
+  lista de dados com `Tabela`; escolha única curta com `ControleSegmentado`; período com
+  `IntervaloDatas` (data solta com `CampoData`).
 - **Layout de página**: `<div className="mx-auto max-w-5xl space-y-6 p-4 md:p-8">` (largura
   `max-w-xl` a `max-w-6xl` conforme a tela). O padding é de cada página, não do layout.
 - **Login sempre claro**: `/` não acompanha o tema (script anti-FOUC no `__root.tsx` e

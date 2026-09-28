@@ -50,7 +50,8 @@ src/
   config/brand.ts                  único ponto de marca no código
   components/ui/                   42 componentes shadcn adaptados ao DS
   components/layout/               AppLayout, AppSidebar, AppHeader, DotGrid
-  components/                      PageHeader/EstadoVazio, Skeletons, CartaoMetrica, Campo, …
+  components/                      PageHeader/EstadoVazio, Skeletons, CartaoMetrica, Campo,
+                                   Tabela, ControleSegmentado, CampoData/IntervaloDatas
   contexts/ThemeContext.tsx        tema claro/escuro/sistema e cor de destaque
   features/<feature>/              api.ts (React Query) e componentes da feature
   integrations/supabase/           clientes (navegador, servidor, service role), middleware, types.ts
@@ -77,8 +78,9 @@ supabase/
 
 - `/` entrar e cadastrar (nome, e-mail, senha), sempre no tema claro.
 - `/dashboard` início com três métricas de exemplo.
-- `/anotacoes` a feature-modelo: tabela, formulário em Dialog, exclusão com confirmação, anotação
-  pessoal ou da organização.
+- `/anotacoes` a feature-modelo: tabela ordenável por título e data, filtro "Todas | Minhas | Da
+  organização", formulário em Dialog, exclusão com confirmação, anotação pessoal ou da
+  organização.
 - `/equipe` nome da organização, cadastro aberto/fechado, membros, remover e readmitir (ações só
   para o dono).
 - `/perfil` nome; o e-mail é só leitura.
