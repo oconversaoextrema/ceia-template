@@ -128,6 +128,14 @@
   /* Raio do ponto da DotGrid: menor no claro, para não competir com o conteúdo */
   --dot-r: 0.75px;
   --dot-r-fade: 1.2px;
+  /* Forma do campo e caixa do rótulo de formulário. Vivem em variável, e não em
+     utilitário, porque `rounded-full` compila para literal e o escopo `.ds-app`
+     não o alcançaria. Fora do app: pílula de 44px e rótulo em versalete. */
+  --ds-input-height: 2.75rem;
+  --ds-input-radius: 9999px;
+  --ds-input-px: 1.25rem;
+  --ds-label-transform: uppercase;
+  --ds-label-tracking: 0.04em;
   --radius: 0.75rem;
   --background: oklch(0.985 0 0); /* #fafafa canvas */
   --foreground: oklch(0.204 0 0); /* #171717 ink */
@@ -509,8 +517,10 @@
 }
 
 @layer base {
-  /* Densidade de aplicação: raio menor,
-     tipografia um degrau abaixo — a área logada é tela de trabalho, não landing */
+  /* Densidade de aplicação: raio menor, tipografia um degrau abaixo, campo de
+     36px com canto discreto e rótulo em caixa normal — a área logada é tela de
+     trabalho, não landing. Só o tamanho do texto é reapontado: entrelinha é
+     razão e tracking é em em, então acompanham sozinhos. */
   .ds-app {
     --radius-xs: 3px;
     --radius-sm: 6px;
@@ -529,6 +539,12 @@
 
     --text-eyebrow--letter-spacing: 0.06em;
     --text-eyebrow--font-weight: 600;
+
+    --ds-input-height: 2.25rem;
+    --ds-input-radius: var(--radius-md);
+    --ds-input-px: 0.75rem;
+    --ds-label-transform: none;
+    --ds-label-tracking: 0;
   }
 }
 
