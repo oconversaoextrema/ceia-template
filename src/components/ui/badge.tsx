@@ -17,7 +17,7 @@ const badgeVariants = cva(
         // Tons semânticos (fundo suave + texto forte) para status e níveis.
         success: "border-transparent bg-success-soft text-success",
         warning: "border-transparent bg-warning-soft text-warning",
-        danger: "border-transparent bg-destructive-soft text-destructive",
+        danger: "border-transparent bg-destructive-soft text-danger-deep",
         info: "border-transparent bg-info-soft text-info",
       },
     },

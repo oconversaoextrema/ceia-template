@@ -94,6 +94,8 @@
 }
 
 :root {
+  /* Cromo nativo (calendário, select, rolagem) no tema certo */
+  color-scheme: light;
   --radius: 0.75rem;
   --background: oklch(0.985 0 0); /* #fafafa canvas */
   --foreground: oklch(0.204 0 0); /* #171717 ink */
@@ -112,7 +114,7 @@
   --destructive: oklch(0.505 0.19 27.52); /* #b91c1c danger deep */
   --destructive-foreground: oklch(1 0 0);
   --destructive-soft: oklch(0.936 0.031 17.72); /* #fee2e2 */
-  --border: oklch(0.947 0 0); /* #ececec hairline */
+  --border: oklch(0.943 0 0); /* #ececec hairline */
   --input: oklch(0.869 0 0); /* #d4d4d4 hairline-strong */
   --ring: oklch(0.596 0.127 163.23);
   /* Feedback (pares soft/deep) — semânticos, independem da marca */
@@ -125,6 +127,12 @@
   --info: oklch(0.488 0.217 264.38); /* #1d4ed8 */
   --info-soft: oklch(0.932 0.032 255.59); /* #dbeafe */
   --info-foreground: oklch(1 0 0);
+  /* Tokens do DS sem par no vocabulário shadcn */
+  --faint: oklch(0.709 0 0); /* #a1a1a1 faint */
+  --hairline-soft: oklch(0.967 0 0); /* #f4f4f4 hairline-soft */
+  --on-inverse: oklch(1 0 0); /* #ffffff on-inverse */
+  --emerald-deep: oklch(0.596 0.127 163.23); /* #059669 emerald-deep */
+  --danger-deep: oklch(0.505 0.19 27.52); /* #b91c1c danger-deep */
   /* Gradiente da marca (emerald-500 → emerald-400) */
   --brand-from: oklch(0.696 0.149 162.48); /* #10b981 */
   --brand-to: oklch(0.773 0.153 163.22); /* #34d399 */
@@ -132,9 +140,9 @@
   --meta: oklch(0.573 0.164 255.82);
   --google: oklch(0.655 0.144 65.21);
   /* Paleta de gráficos (DS + harmônicos) */
-  --chart-1: oklch(0.573 0.164 255.82); /* azul */
-  --chart-2: oklch(0.669 0.176 40.52); /* laranja */
-  --chart-3: oklch(0.673 0.143 161.59); /* verde */
+  --chart-1: oklch(0.575 0.163 255.53); /* #2a78d6 azul */
+  --chart-2: oklch(0.671 0.175 40.64); /* #eb6834 laranja */
+  --chart-3: oklch(0.669 0.141 162.11); /* #1baf7a verde */
   --chart-4: oklch(0.542 0.197 296.01); /* violeta */
   --chart-5: oklch(0.655 0.144 65.21); /* âmbar profundo */
   --chart-6: oklch(0.641 0.111 216.51); /* ciano */
@@ -150,11 +158,12 @@
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.954 0 0);
   --sidebar-accent-foreground: oklch(0.204 0 0);
-  --sidebar-border: oklch(0.947 0 0);
+  --sidebar-border: oklch(0.943 0 0); /* #ececec hairline */
   --sidebar-ring: oklch(0.696 0.149 162.48);
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.146 0 0); /* #0a0a0a canvas */
   --foreground: oklch(0.985 0 0); /* #fafafa ink */
   --card: oklch(0.204 0 0); /* #171717 surface */
@@ -179,18 +188,23 @@
   --success-soft: oklch(0.696 0.149 162.48 / 0.16);
   --success-foreground: oklch(0.204 0 0);
   --warning: oklch(0.837 0.164 84.43); /* #fbbf24 */
-  --warning-soft: oklch(0.781 0.158 72.25 / 0.16);
+  --warning-soft: oklch(0.784 0.159 72.99 / 0.16); /* #f5a623 a 16% */
   --warning-foreground: oklch(0.204 0 0);
   --info: oklch(0.714 0.143 254.62); /* #60a5fa */
-  --info-soft: oklch(0.626 0.186 259.6 / 0.16);
+  --info-soft: oklch(0.623 0.188 259.81 / 0.16); /* #3b82f6 a 16% */
   --info-foreground: oklch(0.204 0 0);
+  --faint: oklch(0.556 0 0); /* #737373 */
+  --hairline-soft: oklch(0.239 0 0); /* #1f1f1f */
+  --on-inverse: oklch(0.145 0 0); /* #0a0a0a */
+  --emerald-deep: oklch(0.773 0.153 163.22); /* #34d399 */
+  --danger-deep: oklch(0.711 0.166 22.22); /* #f87171 */
   --brand-from: oklch(0.696 0.149 162.48);
   --brand-to: oklch(0.773 0.153 163.22);
   --meta: oklch(0.62 0.163 255.32);
   --google: oklch(0.64 0.133 75.47);
-  --chart-1: oklch(0.62 0.163 255.32);
-  --chart-2: oklch(0.621 0.172 40.02);
-  --chart-3: oklch(0.623 0.129 162.79);
+  --chart-1: oklch(0.622 0.161 255.05); /* #3987e5 */
+  --chart-2: oklch(0.622 0.173 40.11); /* #d95926 */
+  --chart-3: oklch(0.621 0.128 163.11); /* #199e70 */
   --chart-4: oklch(0.616 0.176 297.96);
   --chart-5: oklch(0.64 0.133 75.47);
   --chart-6: oklch(0.631 0.107 215.92);
@@ -388,26 +402,26 @@
 @theme inline {
   /* Neutros semânticos → tokens do tema (claro/escuro automáticos) */
   --color-ink: var(--foreground);
-  --color-body: var(--foreground);
+  --color-body: var(--secondary-foreground);
   --color-mute: var(--muted-foreground);
-  --color-faint: color-mix(in oklab, var(--muted-foreground) 65%, transparent);
+  --color-faint: var(--faint);
   --color-hairline: var(--border);
-  --color-hairline-soft: color-mix(in oklab, var(--border) 55%, var(--background));
+  --color-hairline-soft: var(--hairline-soft);
   --color-hairline-strong: var(--input);
   --color-canvas: var(--background);
   --color-surface: var(--card);
   --color-elevated: var(--muted);
   --color-inverse: var(--foreground);
-  --color-on-inverse: var(--background);
+  --color-on-inverse: var(--on-inverse);
 
   /* Pares soft/deep de feedback → trios do tema */
   --color-emerald-soft: var(--success-soft);
-  --color-emerald-deep: var(--success);
+  --color-emerald-deep: var(--emerald-deep);
   --color-success-deep: var(--success);
   --color-warning-deep: var(--warning);
   --color-danger: var(--destructive);
   --color-danger-soft: var(--destructive-soft);
-  --color-danger-deep: var(--destructive);
+  --color-danger-deep: var(--danger-deep);
   --color-info-deep: var(--info);
 }
 
