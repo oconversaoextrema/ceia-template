@@ -31,13 +31,42 @@
   --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   /* Escala de radius do DS (fixa, NÃO deriva de --radius): rounded-lg = 16px,
-     rounded-xl/2xl = 24px — mais arredondada que o default do Tailwind */
+     rounded-xl = 24px, rounded-2xl = 32px — mais arredondada que o default
+     do Tailwind. Dentro de `.ds-app` ela é reapontada um degrau abaixo. */
   --radius-xs: 0.25rem;
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
-  --radius-2xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+
+  --breakpoint-2xl: 1440px;
+
+  /* Tracking: título negativo; rótulo de UI em 0.04em; o 0.14em do eyebrow é
+     decorativo e não vai em rótulo de formulário nem cabeçalho de tabela */
+  --tracking-tightest: -0.04em;
+  --tracking-tighter: -0.03em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.05em;
+  --tracking-label: 0.04em;
+  --tracking-eyebrow: 0.14em;
+
+  /* Motion: duration-{fast,normal,slow,slower} e ease-{out-soft,in-out-soft} */
+  --transition-duration-fast: 150ms;
+  --transition-duration-normal: 200ms;
+  --transition-duration-slow: 300ms;
+  --transition-duration-slower: 500ms;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Elevação discreta; card comum não usa sombra (superfície por contorno) */
+  --shadow-xs: 0 1px 2px 0 rgb(23 23 23 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(23 23 23 / 0.06), 0 1px 2px -1px rgb(23 23 23 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(23 23 23 / 0.08);
+  --shadow-lg: 0 12px 32px -8px rgb(23 23 23 / 0.12);
+  --shadow-xl: 0 24px 56px -16px rgb(23 23 23 / 0.16);
 }
 
 @theme inline {
@@ -355,6 +384,18 @@
    ========================================================================== */
 @theme {
   /* Escala tipográfica nomeada (text-heading-sm, text-body-md, …) */
+  --text-display-2xl: 72px;
+  --text-display-2xl--line-height: 1;
+  --text-display-2xl--letter-spacing: -0.04em;
+  --text-display-2xl--font-weight: 600;
+  --text-display-xl: 60px;
+  --text-display-xl--line-height: 1.02;
+  --text-display-xl--letter-spacing: -0.035em;
+  --text-display-xl--font-weight: 600;
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 1.05;
+  --text-display-lg--letter-spacing: -0.03em;
+  --text-display-lg--font-weight: 600;
   --text-heading-xl: 40px;
   --text-heading-xl--line-height: 1.1;
   --text-heading-xl--letter-spacing: -0.022em;
@@ -397,6 +438,9 @@
   --text-eyebrow--line-height: 1;
   --text-eyebrow--letter-spacing: 0.14em;
   --text-eyebrow--font-weight: 400;
+  --text-code: 13px;
+  --text-code--line-height: 1.6;
+  --text-code--font-weight: 400;
 }
 
 @theme inline {
@@ -619,11 +663,6 @@
   @page {
     margin: 14mm;
   }
-}
-
-@theme {
-  --tracking-label: 0.04em;
-  --tracking-eyebrow: 0.14em;
 }
 
 /* Botão secundário — branco no claro; hover revela anel esmeralda giratório */

@@ -2,10 +2,10 @@ import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 /**
- * O tailwind-merge não conhece a escala tipográfica do DS (`text-heading-*`,
- * `text-body-*`, `text-label-*`, `text-caption`, `text-eyebrow`, definida no
- * `@theme` do styles.css) e a tratava como cor: `cn("text-label-lg",
- * "text-primary")` descartava o tamanho. Registrá-la como `font-size` faz o
+ * O tailwind-merge não conhece a escala tipográfica do DS (`text-display-*`,
+ * `text-heading-*`, `text-body-*`, `text-label-*`, `text-caption`,
+ * `text-eyebrow`, `text-code`, definida no `@theme` do styles.css) e a tratava
+ * como cor: `cn("text-label-lg", "text-primary")` descartava o tamanho. Registrá-la como `font-size` faz o
  * `cn` manter as duas classes.
  */
 const twMerge = extendTailwindMerge({
@@ -14,6 +14,9 @@ const twMerge = extendTailwindMerge({
       "font-size": [
         {
           text: [
+            "display-2xl",
+            "display-xl",
+            "display-lg",
             "heading-xl",
             "heading-lg",
             "heading-md",
@@ -26,6 +29,7 @@ const twMerge = extendTailwindMerge({
             "label-md",
             "caption",
             "eyebrow",
+            "code",
           ],
         },
       ],
