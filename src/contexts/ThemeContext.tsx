@@ -114,15 +114,22 @@ function applyTheme(t: Theme, after?: () => void, forcarClaro = false) {
   };
   const startViewTransition = (
     document as Document & {
-      startViewTransition?: (cb: () => void) => { finished?: Promise<void> };
+      startViewTransition?: (cb: () => void) => {
+        ready?: Promise<void>;
+        updateCallbackDone?: Promise<void>;
+        finished?: Promise<void>;
+      };
     }
   ).startViewTransition?.bind(document);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const alreadyApplied = root.classList.contains(target);
   if (startViewTransition && !reduced && !alreadyApplied) {
-    // Transições abortadas (navegação/toggle rápido) rejeitam `finished`;
-    // sem o catch viram unhandled rejection no console.
-    startViewTransition(swap).finished?.catch(() => {});
+    // Transições abortadas (navegação/toggle rápido, aba oculta) rejeitam as
+    // três promises; sem o catch viram unhandled rejection no console.
+    const transicao = startViewTransition(swap);
+    transicao.ready?.catch(() => {});
+    transicao.updateCallbackDone?.catch(() => {});
+    transicao.finished?.catch(() => {});
   } else {
     swap();
   }
