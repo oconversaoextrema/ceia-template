@@ -134,6 +134,15 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        {/* Definição global do gradiente da marca, usada por `fill-brand-gradient` */}
+        <svg width="0" height="0" aria-hidden="true" focusable="false" className="absolute">
+          <defs>
+            <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: "var(--brand-from)" }} />
+              <stop offset="100%" style={{ stopColor: "var(--brand-to)" }} />
+            </linearGradient>
+          </defs>
+        </svg>
         {children}
         <Scripts />
       </body>
