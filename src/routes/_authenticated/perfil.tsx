@@ -60,7 +60,7 @@ function FormularioPerfil({ perfil }: { perfil: Perfil }) {
           salvar.mutate();
         }}
       >
-        <Campo rotulo="Nome completo" htmlFor="nome">
+        <Campo rotulo="Nome" htmlFor="nome">
           <Input
             id="nome"
             required

@@ -46,7 +46,7 @@ export function SkeletonTabela({ linhas = 5, colunas = 5 }: { linhas?: number; c
   );
 }
 
-/** Lista de cards empilhados (contratos, petições, modelos, agenda). */
+/** Lista de cards empilhados. */
 export function SkeletonLista({ itens = 4 }: { itens?: number }) {
   return (
     <div className="space-y-3">

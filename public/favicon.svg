@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Ícone padrão CEIA (mesmo do Conversão CRM): símbolo do infinito/seta com o
+<!-- Ícone padrão CEIA: símbolo do infinito/seta com o
      gradiente da marca, sem fundo. Mesmo path de src/components/ui/logo-simbolo.tsx. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>

@@ -21,7 +21,7 @@ import { SkeletonTabela } from "@/components/Skeletons";
 import { usePerfil, type Organizacao } from "@/features/perfil/api";
 import {
   useContasFora,
-  useDefinirCadastroAberto,
+  useDefinirCadastro,
   useMembros,
   useReadmitirMembro,
   useRemoverMembro,
@@ -223,7 +223,7 @@ function CartaoCadastro({
   organizacao: Organizacao;
   editavel: boolean;
 }) {
-  const definir = useDefinirCadastroAberto();
+  const definir = useDefinirCadastro();
   const aberto = organizacao.cadastro_aberto;
 
   function alternar(valor: boolean) {

@@ -181,7 +181,7 @@ function PaginaLogin() {
                           className="pl-11"
                           value={nome}
                           onChange={(e) => setNome(e.target.value)}
-                          placeholder="Seu nome completo"
+                          placeholder="Seu nome"
                         />
                       </div>
                     </div>

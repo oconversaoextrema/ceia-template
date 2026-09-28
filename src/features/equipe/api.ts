@@ -99,7 +99,7 @@ export function useSalvarOrganizacao(organizacao: Organizacao) {
   });
 }
 
-export function useDefinirCadastroAberto() {
+export function useDefinirCadastro() {
   const invalidar = useInvalidarEquipe();
   return useMutation({
     mutationFn: async (aberto: boolean) => {
