@@ -107,11 +107,6 @@
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-chart-6: var(--chart-6);
-  --color-chart-7: var(--chart-7);
-  --color-chart-8: var(--chart-8);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -176,18 +171,13 @@
   /* Gradiente da marca (emerald-500 → emerald-400) */
   --brand-from: oklch(0.696 0.149 162.48); /* #10b981 */
   --brand-to: oklch(0.773 0.153 163.22); /* #34d399 */
-  /* Plataformas de anúncio — fixas, independem do accent (= chart-1 / chart-5) */
+  /* Plataformas de anúncio — fixas, independem do accent */
   --meta: oklch(0.573 0.164 255.82);
   --google: oklch(0.655 0.144 65.21);
-  /* Paleta de gráficos (DS + harmônicos) */
+  /* Paleta de gráficos: três séries em ordem fixa (a quarta vira "Outros") */
   --chart-1: oklch(0.575 0.163 255.53); /* #2a78d6 azul */
   --chart-2: oklch(0.671 0.175 40.64); /* #eb6834 laranja */
   --chart-3: oklch(0.669 0.141 162.11); /* #1baf7a verde */
-  --chart-4: oklch(0.542 0.197 296.01); /* violeta */
-  --chart-5: oklch(0.655 0.144 65.21); /* âmbar profundo */
-  --chart-6: oklch(0.641 0.111 216.51); /* ciano */
-  --chart-7: oklch(0.6 0.216 355.86); /* rosa */
-  --chart-8: oklch(0.587 0.152 43.88); /* ferrugem */
   /* Infra de gráficos — consumir como var(--x) direto */
   --chart-grid: rgba(0, 0, 0, 0.06);
   --chart-axis: rgba(0, 0, 0, 0.3);
@@ -220,8 +210,8 @@
   --muted-foreground: oklch(0.733 0 0); /* #a8a8a8 mute */
   --accent: oklch(0.27 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.637 0.208 25.33); /* #ef4444 */
-  --destructive-foreground: oklch(1 0 0);
+  --destructive: oklch(0.711 0.166 22.22); /* #f87171 */
+  --destructive-foreground: oklch(0.204 0 0); /* texto escuro sobre o vermelho claro */
   --destructive-soft: oklch(0.637 0.208 25.33 / 0.16);
   --border: oklch(0.27 0 0); /* #262626 hairline */
   --input: oklch(0.371 0 0); /* #404040 hairline-strong */
@@ -247,11 +237,6 @@
   --chart-1: oklch(0.622 0.161 255.05); /* #3987e5 */
   --chart-2: oklch(0.622 0.173 40.11); /* #d95926 */
   --chart-3: oklch(0.621 0.128 163.11); /* #199e70 */
-  --chart-4: oklch(0.616 0.176 297.96);
-  --chart-5: oklch(0.64 0.133 75.47);
-  --chart-6: oklch(0.631 0.107 215.92);
-  --chart-7: oklch(0.648 0.19 352.76);
-  --chart-8: oklch(0.639 0.137 51.24);
   --chart-grid: rgba(255, 255, 255, 0.04);
   --chart-axis: rgba(255, 255, 255, 0.2);
   --tooltip-bg: #262626;
