@@ -146,6 +146,7 @@ export type Database = {
         Returns: { email: string; nome: string; user_id: string }[]
       }
       definir_cadastro_aberto: { Args: { _aberto: boolean }; Returns: boolean }
+      garantir_instalacao: { Args: Record<PropertyKey, never>; Returns: boolean }
       garantir_organizacao: { Args: Record<PropertyKey, never>; Returns: boolean }
       mesma_organizacao: { Args: { _user: string }; Returns: boolean }
       meu_papel: {
