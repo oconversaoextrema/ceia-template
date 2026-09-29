@@ -10,6 +10,8 @@ As seis regras que mais quebram:
 
 1. Migration nova sempre em arquivo novo com timestamp, idempotente; nunca editar uma aplicada.
 2. Toda tabela com RLS e a policy padrão de `anotacoes`; caso novo em `supabase/tests/rls_test.sql`.
+   Todo objeto novo (tabela, view, função) entra no `garantir_instalacao()`: a migration recria a
+   função com os grants dele (manual, seção 3).
 3. `src/integrations/supabase/types.ts` é mantido à mão e muda junto com cada migration.
 4. Sem API do Node no servidor; service role só em server function com `requireSupabaseAuth`,
    importando `client.server` dentro do handler.

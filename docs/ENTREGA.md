@@ -19,7 +19,12 @@ Checklist do último commit antes da entrega. Tudo o que não é do cliente sai 
 
 - [ ] `npm run build` sem erro
 - [ ] `npm run lint` com 0 erros
-- [ ] `supabase/tests/rls_test.sql` devolve `RLS OK` no banco de produção
+- [ ] `supabase/tests/rls_test.sql` devolve `RLS OK` e `supabase/tests/remix_reparo_test.sql`
+      devolve `REPARO OK` no banco de produção
+- [ ] Todo objeto novo (tabela, view, função) está nos privilégios de `garantir_instalacao()`,
+      na versão mais recente da função (migration `auto_reparo_remix` ou posterior)
+- [ ] _Authentication → URL Configuration_ com a URL de produção em _Site URL_ e
+      `https://<domínio>/**` em _Redirect URLs_ (magic link e nova senha)
 - [ ] Busca por termos internos vazia, por exemplo:
       `git grep -i -E "template|ceia|anotac|TODO|FIXME"`, revisando cada ocorrência
 - [ ] `README.md` reescrito para o cliente a partir de `docs/README_CLIENTE.md`

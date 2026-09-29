@@ -25,14 +25,20 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
    - CLI: `npx supabase init` (cria `supabase/config.toml`; não mexe nas migrations),
      `npx supabase login`, `npx supabase link --project-ref <ref>`, `npx supabase db push`;
    - ou cole cada arquivo, em ordem de timestamp, no _SQL Editor_ do painel.
-     Depois rode `supabase/tests/rls_test.sql` no SQL Editor: o esperado é uma linha `RLS OK`.
+     Depois rode no SQL Editor `supabase/tests/rls_test.sql` (esperado: uma linha `RLS OK`) e
+     `supabase/tests/remix_reparo_test.sql` (esperado: `REPARO OK`).
 5. **Auth**: em _Authentication → Sign In / Providers → Email_, decida sobre _Confirm email_
    (ligado, a conta só entra depois do link recebido). Em _URL Configuration_, ponha a URL do dev
-   (`http://localhost:8080`) e, depois, a de produção.
+   (`http://localhost:8080`) em _Site URL_ e `http://localhost:8080/**` em _Redirect URLs_ (o
+   magic link volta para `/` e o link de nova senha para `/redefinir-senha`); depois, as de
+   produção.
 6. `npm install` e `npm run dev` (sobe em `http://localhost:8080`).
 7. **Primeira conta**: aba "Cadastrar" em `/`. Ela vira `dono` de "Minha organização" (renomeie
    em Equipe). As contas seguintes entram como `membro` enquanto o cadastro estiver aberto; o
-   dono fecha e reabre em Equipe.
+   dono fecha e reabre em Equipe. A tela de entrada tem ainda "Magic Link" (só para quem já tem
+   conta: `shouldCreateUser: false`) e "Esqueceu a senha?", que leva a `/redefinir-senha`. Os
+   dois respondem de forma neutra ("Se houver uma conta com este e-mail…"). Erros do Auth em
+   português ficam em `src/lib/auth-errors.ts`.
 
 ## 2. Modelo de dados e permissões
 
@@ -46,6 +52,15 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
 - Cadastro fechado: o trigger levanta `Cadastro fechado…` e o insert em `auth.users` é desfeito.
   O Auth devolve ao cliente o erro genérico `Database error saving new user`; a tela de entrada
   traduz os dois para "Cadastro fechado. Peça ao responsável para liberar.".
+- **Auto-reparo** (`garantir_instalacao()`, migration `auto_reparo_remix`): quando o banco é
+  copiado reexecutando as migrations (remix), GRANT/REVOKE soltos e triggers em `auth.users`
+  podem ficar para trás. A função recria o trigger `on_auth_user_created`, cria perfil e vínculo
+  das contas que nasceram sem ele (a mais antiga vira dona se não houver organização) e, se uma
+  das três sentinelas de privilégio falhar, revoga tudo de `anon`/`authenticated` em `public` e
+  reaplica a lista exata de grants. O app a chama sozinho: no `beforeLoad` de `/` (no servidor,
+  como visitante, no máximo a cada 10 minutos por instância, `src/lib/instalacao.ts`) e no
+  `GarantirPerfil` da área logada quando a conta chega sem perfil ou sem organização. Falha
+  nunca bloqueia a tela.
 - **Policy padrão de conteúdo** (a de `anotacoes`): select/update/delete quando
   `user_id = auth.uid()` **ou** `organizacao_id = minha_organizacao()`; insert só com
   `user_id = auth.uid()` e `organizacao_id` nulo ou igual à minha. `organizacao_id` nulo =
@@ -70,8 +85,14 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
    copiadas de `anotacoes` (troque o nome da tabela). Função nova: `security definer` só quando
    precisar ler o que a RLS esconde, sempre com `set search_path = public`,
    `revoke execute … from anon, public` e `grant execute … to authenticated`.
+   **Todo objeto novo entra no `garantir_instalacao()`**: na mesma migration, recrie a função
+   (`create or replace`, copiando a versão mais recente) com os grants da tabela, view ou função
+   nova na seção 3 dela, e termine com `do $$ begin perform public.garantir_instalacao(); end $$;`.
+   O que não estiver listado fica fechado para `anon`/`authenticated` depois de um reparo.
 4. **Teste**: acrescente os casos da tabela em `supabase/tests/rls_test.sql` (membro vê o da
    organização, removido só vê o seu, ninguém cria em nome de outro) e rode até dar `RLS OK`.
+   Em `supabase/tests/remix_reparo_test.sql`, confira os privilégios da tabela nova depois do
+   reparo, até dar `REPARO OK`.
 5. **Tipos**: atualize `src/integrations/supabase/types.ts` à mão (Row/Insert/Update,
    Relationships, Functions, Enums, `Constants`). Ele é a fonte dos tipos do cliente Supabase.
 6. **Dados**: `src/features/<feature>/api.ts` no molde de `features/anotacoes/api.ts`: uma raiz
@@ -184,8 +205,9 @@ Versão do DS aplicada em `DS_VERSION`.
   `IntervaloDatas` (data solta com `CampoData`).
 - **Layout de página**: `<div className="mx-auto max-w-5xl space-y-6 p-4 md:p-8">` (largura
   `max-w-xl` a `max-w-6xl` conforme a tela). O padding é de cada página, não do layout.
-- **Login sempre claro**: `/` não acompanha o tema (script anti-FOUC no `__root.tsx` e
-  `forcarClaro` no `ThemeProvider`). Tela pública nova entra na mesma regra.
+- **Login sempre claro**: `/` e `/redefinir-senha` não acompanham o tema (`ROTAS_SEMPRE_CLARAS`
+  no `__root.tsx`, lida pelo script anti-FOUC e pelo `forcarClaro` do `ThemeProvider`). Tela
+  pública nova entra nessa lista e usa `LayoutEntrada` (painel de marca + conteúdo).
 - Teste cada tela nova em claro, escuro e 375 px de largura.
 
 ## 6. Antes de cada commit
@@ -196,13 +218,16 @@ npm run lint     # 0 erros
 npm run format   # Prettier
 ```
 
-Mexeu em migration ou policy: rode `supabase/tests/rls_test.sql` e confira `RLS OK`.
+Mexeu em migration ou policy: rode `supabase/tests/rls_test.sql` (`RLS OK`) e
+`supabase/tests/remix_reparo_test.sql` (`REPARO OK`).
 Commits pequenos, mensagem em português dizendo o que muda.
 
 ## 7. Pronto para entregar
 
 - [ ] `brand.ts` com nome e tagline da solução; meta tags coerentes.
-- [ ] Todas as migrations aplicadas no projeto de produção e `rls_test.sql` com `RLS OK`.
+- [ ] Todas as migrations aplicadas no projeto de produção, `rls_test.sql` com `RLS OK` e
+      `remix_reparo_test.sql` com `REPARO OK`.
+- [ ] Toda tabela, view e função da solução com os privilégios em `garantir_instalacao()`.
 - [ ] `types.ts` igual ao schema; `npm run build` e `npm run lint` sem erro.
 - [ ] Cada tela testada em claro, escuro e 375 px; estados de carregamento, vazio e erro.
 - [ ] Primeira conta criada vira dona; cadastro fecha e reabre em Equipe.
