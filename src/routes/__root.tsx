@@ -19,11 +19,15 @@ import { BRAND } from "@/config/brand";
 const TITULO = BRAND.name;
 const DESCRICAO = BRAND.tagline;
 
+// Telas públicas (entrada e nova senha) são sempre claras: o tema salvo só vale
+// na área logada. Tela pública nova entra nesta lista.
+const ROTAS_SEMPRE_CLARAS = ["/", "/redefinir-senha"];
+
 // Anti-FOUC: aplica a classe .dark antes do primeiro paint. A chave do
 // localStorage DEVE casar com THEME_KEY do ThemeContext ("painel-tema").
-// A tela de entrada (`/`) é sempre clara: o tema salvo só vale na área logada
-// (mesma regra em `ThemeProvider`, via `forcarClaro`).
-const THEME_BOOT_SCRIPT = `(function(){try{if(location.pathname==="/"){document.documentElement.classList.remove("dark");return;}var t=localStorage.getItem("painel-tema")||"light";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`;
+// As `ROTAS_SEMPRE_CLARAS` pulam o tema salvo (mesma regra em `ThemeProvider`,
+// via `forcarClaro`).
+const THEME_BOOT_SCRIPT = `(function(){try{if(${JSON.stringify(ROTAS_SEMPRE_CLARAS)}.indexOf(location.pathname)>=0){document.documentElement.classList.remove("dark");return;}var t=localStorage.getItem("painel-tema")||"light";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`;
 
 function NotFoundComponent() {
   return (
@@ -152,12 +156,13 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  // O login em `/` não acompanha o tema claro/escuro do usuário.
+  // As telas públicas não acompanham o tema claro/escuro do usuário.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const forcarClaro = ROTAS_SEMPRE_CLARAS.includes(pathname);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider forcarClaro={pathname === "/"}>
+      <ThemeProvider forcarClaro={forcarClaro}>
         {/* As rotas filhas renderizam aqui: sem o <Outlet /> nenhuma página aparece. */}
         <Outlet />
         <Toaster richColors position="top-right" />

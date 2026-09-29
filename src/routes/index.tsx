@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Loader2, Lock, Mail, ShieldCheck, User, Users } from "lucide-react";
+import { Loader2, Lock, Mail, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogoSimbolo } from "@/components/ui/logo-simbolo";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LayoutEntrada } from "@/components/layout/LayoutEntrada";
 import { BRAND } from "@/config/brand";
+import { ehContaInexistenteNoOtp, ehLimiteDeEnvio, traduzirErroAuth } from "@/lib/auth-errors";
+import { conferirInstalacao } from "@/lib/instalacao";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,208 +22,296 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: BRAND.tagline },
     ],
   }),
+  // Confere a instalação (trigger de cadastro e privilégios) antes da primeira
+  // conta: no servidor, como visitante, no máximo a cada 10 minutos. Falha não
+  // segura a tela.
+  beforeLoad: async () => {
+    await conferirInstalacao();
+  },
   component: PaginaLogin,
 });
 
-// Três destaques do painel de marca: troque pelos da solução.
-const DESTAQUES = [
-  { icone: LayoutDashboard, texto: "O trabalho da equipe reunido num só painel" },
-  { icone: Users, texto: "Cada pessoa com a sua conta, dentro da mesma organização" },
-  { icone: ShieldCheck, texto: "Dados protegidos por conta e por organização" },
-];
+type Aba = "entrar" | "cadastrar" | "magic";
 
-/** Mensagens do Supabase Auth (e do trigger de cadastro) em português. */
-function traduzirErro(msg: string): string {
-  if (msg.includes("Invalid login")) return "E-mail ou senha incorretos.";
-  // O trigger `handle_new_user` recusa a conta com o cadastro fechado; o Auth
-  // costuma devolver só o erro genérico de banco.
-  if (msg.includes("Cadastro fechado") || /database error saving new user/i.test(msg))
-    return "Cadastro fechado. Peça ao responsável para liberar.";
-  if (/signup.*disabled|signups? not allowed/i.test(msg))
-    return "Cadastro desativado neste projeto. Fale com o responsável.";
-  if (msg.includes("Email not confirmed"))
-    return "Confirme seu e-mail antes de entrar. O link foi enviado no cadastro.";
-  if (/weak|pwned/i.test(msg))
-    return "Senha fraca ou já vazada em outros sites. Escolha uma senha mais forte.";
-  if (/password should be at least/i.test(msg))
-    return "A senha precisa ter pelo menos 6 caracteres.";
-  if (msg.includes("already registered")) return "Este e-mail já tem conta. Entre.";
-  if (/invalid.*email|unable to validate email/i.test(msg)) return "E-mail inválido.";
-  if (/rate limit|too many/i.test(msg))
-    return "Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.";
-  return msg;
-}
+const MSG_RECUPERACAO =
+  "Se houver uma conta com este e-mail, enviamos o link para redefinir a senha.";
+const MSG_MAGIC_LINK = "Se houver uma conta com este e-mail, enviamos o link de acesso.";
 
 function PaginaLogin() {
   const navigate = useNavigate();
-  const [modo, setModo] = useState<"entrar" | "cadastrar">("entrar");
+  const [aba, setAba] = useState<Aba>("entrar");
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [enviandoRecuperacao, setEnviandoRecuperacao] = useState(false);
+  const [linkEnviado, setLinkEnviado] = useState(false);
+  const indoParaPainel = useRef(false);
 
-  // Logado que abre a tela de entrada vai direto para o painel.
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
-    });
+  const irParaPainel = useCallback(() => {
+    if (indoParaPainel.current) return;
+    indoParaPainel.current = true;
+    void navigate({ to: "/dashboard", replace: true });
   }, [navigate]);
 
-  async function enviar(e: React.FormEvent) {
+  // Logado que abre a tela de entrada vai direto para o painel. A volta do
+  // magic link também passa por aqui: o cliente lê a sessão da URL e avisa.
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((evento, sessao) => {
+      if (sessao && (evento === "INITIAL_SESSION" || evento === "SIGNED_IN")) irParaPainel();
+    });
+    return () => data.subscription.unsubscribe();
+  }, [irParaPainel]);
+
+  async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);
     try {
-      if (modo === "entrar") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-        if (error) throw error;
-        navigate({ to: "/dashboard" });
-      } else {
-        if (nome.trim().length < 2) {
-          toast.error("Informe o seu nome.");
-          return;
-        }
-        // A primeira conta da instalação vira dona da organização; as
-        // seguintes entram como membros (trigger `handle_new_user`).
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password: senha,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { nome: nome.trim() },
-          },
-        });
-        if (error) throw error;
-        if (data.session) {
-          navigate({ to: "/dashboard" });
-        } else {
-          toast.success("Conta criada! Confirme seu e-mail para entrar.");
-          setSenha("");
-          setModo("entrar");
-        }
+      const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+      if (error) {
+        toast.error("Erro ao entrar", { description: traduzirErroAuth(error) });
+        return;
       }
+      irParaPainel();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Não foi possível continuar.";
-      toast.error(traduzirErro(msg));
+      toast.error("Erro ao entrar", { description: traduzirErroAuth(err) });
     } finally {
       setCarregando(false);
     }
   }
 
+  async function cadastrar(e: React.FormEvent) {
+    e.preventDefault();
+    if (nome.trim().length < 2) {
+      toast.error("Informe o seu nome.");
+      return;
+    }
+    setCarregando(true);
+    try {
+      // A primeira conta da instalação vira dona da organização; as
+      // seguintes entram como membros (trigger `handle_new_user`).
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { nome: nome.trim() },
+        },
+      });
+      if (error) {
+        toast.error("Erro ao criar conta", { description: traduzirErroAuth(error) });
+        return;
+      }
+      if (data.session) {
+        irParaPainel();
+      } else {
+        toast.success("Conta criada", { description: "Confirme seu e-mail para entrar." });
+        setSenha("");
+        setAba("entrar");
+      }
+    } catch (err) {
+      toast.error("Erro ao criar conta", { description: traduzirErroAuth(err) });
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  async function enviarMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setCarregando(true);
+    try {
+      // Nunca cria conta: conta nova só pela aba Cadastrar.
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/` },
+      });
+      // E-mail sem conta responde igual a um envio, para não revelar quem tem conta.
+      if (error && !ehContaInexistenteNoOtp(error)) {
+        toast.error("Erro ao enviar o link", { description: traduzirErroAuth(error) });
+        return;
+      }
+      setLinkEnviado(true);
+      toast.success("Link enviado", { description: MSG_MAGIC_LINK });
+    } catch (err) {
+      toast.error("Erro ao enviar o link", { description: traduzirErroAuth(err) });
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  async function esqueciSenha() {
+    const alvo = email.trim();
+    if (!alvo) {
+      toast.error("Digite seu e-mail", {
+        description: "Preencha o campo E-mail para receber o link de nova senha.",
+      });
+      return;
+    }
+    setEnviandoRecuperacao(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(alvo, {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      });
+      // Resposta neutra: só o limite de envio aparece como erro.
+      if (error && ehLimiteDeEnvio(error)) {
+        toast.error("Erro ao enviar o e-mail", { description: traduzirErroAuth(error) });
+        return;
+      }
+      toast.success("Verifique seu e-mail", { description: MSG_RECUPERACAO });
+    } catch (err) {
+      toast.error("Erro ao enviar o e-mail", { description: traduzirErroAuth(err) });
+    } finally {
+      setEnviandoRecuperacao(false);
+    }
+  }
+
   return (
-    <div className="grid min-h-screen bg-background lg:grid-cols-2">
-      {/* ── Painel de marca (deliberadamente escuro nos dois temas) ── */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-neutral-950 p-10 text-neutral-50 lg:flex">
-        <div className="relative flex items-center gap-3">
-          <LogoSimbolo className="size-10" title="" />
-          <span className="text-base font-semibold tracking-tight">{BRAND.name}</span>
-        </div>
+    <LayoutEntrada titulo="Bem-vindo de volta" descricao={`Entre na sua conta do ${BRAND.name}`}>
+      <Card className="border-border">
+        <Tabs value={aba} onValueChange={(v) => setAba(v as Aba)}>
+          <CardHeader className="pb-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="entrar">Entrar</TabsTrigger>
+              <TabsTrigger value="cadastrar">Cadastrar</TabsTrigger>
+              <TabsTrigger value="magic">Magic Link</TabsTrigger>
+            </TabsList>
+          </CardHeader>
 
-        <div className="relative max-w-md space-y-8">
-          <div>
-            <h1 className="text-[34px] font-semibold leading-tight tracking-tight">
-              {BRAND.tagline}
-            </h1>
-            <p className="mt-3 text-[15px] text-neutral-400">
-              Entre com a sua conta para acessar o painel da equipe.
-            </p>
-          </div>
-          <div className="space-y-4">
-            {DESTAQUES.map((d) => (
-              <div key={d.texto} className="flex items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-neutral-800">
-                  <d.icone size={16} strokeWidth={1.75} className="text-neutral-200" />
+          <CardContent>
+            <TabsContent value="entrar" className="mt-0">
+              <form onSubmit={entrar} className="space-y-4">
+                <CampoEmail id="entrar-email" valor={email} onChange={setEmail} />
+                <div className="space-y-2">
+                  <Label htmlFor="entrar-senha">Senha</Label>
+                  <Input
+                    icone={<Lock />}
+                    id="entrar-senha"
+                    name="password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    placeholder="Sua senha"
+                  />
                 </div>
-                <span className="text-[13px] text-neutral-300">{d.texto}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+                <Button type="submit" className="w-full" disabled={carregando}>
+                  {carregando && <Loader2 className="animate-spin" />}
+                  {carregando ? "Entrando..." : "Entrar"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="w-full text-muted-foreground hover:text-primary"
+                  disabled={carregando || enviandoRecuperacao}
+                  onClick={() => void esqueciSenha()}
+                >
+                  {enviandoRecuperacao ? "Enviando..." : "Esqueceu a senha?"}
+                </Button>
+              </form>
+            </TabsContent>
 
-        <p className="relative font-mono text-[11px] text-neutral-500">
-          Powered by {BRAND.company}
-        </p>
-      </div>
+            <TabsContent value="cadastrar" className="mt-0">
+              <form onSubmit={cadastrar} className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  A primeira conta criada vira dona da organização; as seguintes entram como
+                  membros.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="cadastrar-nome">Nome</Label>
+                  <Input
+                    icone={<User />}
+                    id="cadastrar-nome"
+                    name="name"
+                    required
+                    autoComplete="name"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    placeholder="Seu nome"
+                  />
+                </div>
+                <CampoEmail id="cadastrar-email" valor={email} onChange={setEmail} />
+                <div className="space-y-2">
+                  <Label htmlFor="cadastrar-senha">Senha</Label>
+                  <Input
+                    icone={<Lock />}
+                    id="cadastrar-senha"
+                    name="new-password"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    placeholder="Mínimo de 8 caracteres"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={carregando}>
+                  {carregando && <Loader2 className="animate-spin" />}
+                  {carregando ? "Criando conta..." : "Criar conta"}
+                </Button>
+              </form>
+            </TabsContent>
 
-      {/* ── Formulário ── */}
-      <div className="flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md space-y-6">
-          <div className="flex flex-col items-center gap-2 lg:items-start">
-            <LogoSimbolo className="size-12 lg:hidden" />
-            <h2 className="text-2xl font-bold tracking-tight">
-              {modo === "entrar" ? "Bem-vindo de volta" : "Crie sua conta"}
-            </h2>
-            <p className="text-center text-sm text-muted-foreground lg:text-left">
-              {modo === "entrar"
-                ? `Entre na sua conta do ${BRAND.name}`
-                : "A primeira conta criada vira dona da organização; as seguintes entram como membros."}
-            </p>
-          </div>
-
-          <Card className="border-border">
-            <Tabs value={modo} onValueChange={(v) => setModo(v as "entrar" | "cadastrar")}>
-              <CardHeader className="pb-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="entrar">Entrar</TabsTrigger>
-                  <TabsTrigger value="cadastrar">Cadastrar</TabsTrigger>
-                </TabsList>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <form onSubmit={enviar} className="space-y-4">
-                  {modo === "cadastrar" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="nome">Nome</Label>
-                      <Input
-                        icone={<User />}
-                        id="nome"
-                        name="name"
-                        required
-                        autoComplete="name"
-                        value={nome}
-                        onChange={(e) => setNome(e.target.value)}
-                        placeholder="Seu nome"
-                      />
-                    </div>
-                  )}
+            <TabsContent value="magic" className="mt-0">
+              {linkEnviado ? (
+                <div className="space-y-4 py-6 text-center">
+                  <Mail className="mx-auto size-12 text-primary" strokeWidth={1.5} />
                   <div className="space-y-2">
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input
-                      icone={<Mail />}
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="voce@empresa.com.br"
-                    />
+                    <CardTitle>Verifique seu e-mail</CardTitle>
+                    <CardDescription>
+                      Se houver uma conta com <strong className="text-foreground">{email}</strong>,
+                      enviamos o link de acesso.
+                    </CardDescription>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="senha">Senha</Label>
-                    <Input
-                      icone={<Lock />}
-                      id="senha"
-                      name="password"
-                      type="password"
-                      required
-                      minLength={6}
-                      autoComplete={modo === "entrar" ? "current-password" : "new-password"}
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      placeholder="Mínimo de 6 caracteres"
-                    />
-                  </div>
+                  <Button type="button" variant="ghost" onClick={() => setLinkEnviado(false)}>
+                    Usar outro e-mail
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={enviarMagicLink} className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Receba no e-mail um link que entra sem senha.
+                  </p>
+                  <CampoEmail id="magic-email" valor={email} onChange={setEmail} />
                   <Button type="submit" className="w-full" disabled={carregando}>
-                    {carregando && <Loader2 className="size-4 animate-spin" />}
-                    {modo === "entrar" ? "Entrar" : "Criar conta"}
+                    {carregando && <Loader2 className="animate-spin" />}
+                    {carregando ? "Enviando..." : "Enviar magic link"}
                   </Button>
                 </form>
-              </CardContent>
-            </Tabs>
-          </Card>
-        </div>
-      </div>
+              )}
+            </TabsContent>
+          </CardContent>
+        </Tabs>
+      </Card>
+    </LayoutEntrada>
+  );
+}
+
+function CampoEmail({
+  id,
+  valor,
+  onChange,
+}: {
+  id: string;
+  valor: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>E-mail</Label>
+      <Input
+        icone={<Mail />}
+        id={id}
+        name="email"
+        type="email"
+        required
+        autoComplete="email"
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="voce@empresa.com.br"
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { EstadoVazio } from "@/components/PageHeader";
 import { SkeletonPagina } from "@/components/Skeletons";
 import { CHAVE_PERFIL, usePerfil } from "@/features/perfil/api";
+import { garantirInstalacao } from "@/lib/instalacao";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -41,38 +42,43 @@ function LayoutAutenticado() {
  * O perfil existe sempre: o trigger `handle_new_user` cria um por conta. Se
  * mesmo assim não vier, mostra o erro em vez de ficar em laço de carregamento.
  *
- * Aqui também roda o reparo da organização única (`garantir_organizacao`): o
- * trigger já vincula toda conta nova, e a RPC só cria a organização quando ainda
- * não existe nenhuma. Quem foi removido pelo dono continua fora — ela não readmite.
+ * Aqui também rodam os reparos, uma vez por carregamento da área logada:
+ * 1. `garantir_instalacao`, só quando a conta chega sem perfil ou sem
+ *    organização (banco copiado sem o trigger de cadastro): recria o trigger,
+ *    cria perfil e vínculo das contas que nasceram sem ele e refaz os privilégios;
+ * 2. `garantir_organizacao`: cria a organização quando ainda não existe
+ *    nenhuma. Quem foi removido pelo dono continua fora: nenhum dos dois readmite.
  */
 function GarantirPerfil({ children }: { children: ReactNode }) {
   const { data, isPending, isError, error } = usePerfil();
   const qc = useQueryClient();
-  const [garantindoOrganizacao, setGarantindoOrganizacao] = useState(true);
+  const [reparando, setReparando] = useState(true);
+  const reparoIniciado = useRef(false);
 
   useEffect(() => {
-    let vivo = true;
-    async function garantir() {
+    if (isPending || reparoIniciado.current) return;
+    reparoIniciado.current = true;
+    const semPerfilOuOrganizacao = isError || !data?.perfil || !data.membro;
+
+    async function reparar() {
+      let mudou = false;
       try {
+        if (semPerfilOuOrganizacao) mudou = await garantirInstalacao();
         const { data: passouATerVinculo, error: erro } = await supabase.rpc("garantir_organizacao");
         if (erro) throw new Error(erro.message);
-        if (vivo && passouATerVinculo === true) {
-          void qc.invalidateQueries({ queryKey: CHAVE_PERFIL });
-        }
+        mudou ||= passouATerVinculo === true;
       } catch (e: unknown) {
         const motivo = e instanceof Error ? e.message : "erro desconhecido";
         toast.error(`Não foi possível verificar a organização: ${motivo}`);
       } finally {
-        if (vivo) setGarantindoOrganizacao(false);
+        if (mudou) await qc.invalidateQueries({ queryKey: CHAVE_PERFIL });
+        setReparando(false);
       }
     }
-    void garantir();
-    return () => {
-      vivo = false;
-    };
-  }, [qc]);
+    void reparar();
+  }, [isPending, isError, data, qc]);
 
-  if (isPending || garantindoOrganizacao) return <SkeletonPagina />;
+  if (isPending || reparando) return <SkeletonPagina />;
 
   if (isError || !data.perfil) {
     return (
