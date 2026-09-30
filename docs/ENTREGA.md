@@ -29,3 +29,11 @@ Checklist do último commit antes da entrega. Tudo o que não é do cliente sai 
       `git grep -i -E "template|ceia|anotac|TODO|FIXME"`, revisando cada ocorrência
 - [ ] `README.md` reescrito para o cliente a partir de `docs/README_CLIENTE.md`
 - [ ] `src/config/brand.ts` com o nome e a tagline finais
+- [ ] Antes do primeiro cadastro no publicado e em cada remix de teste: `GET <SUPABASE_URL>/auth/v1/settings`
+      com a publishable key devolve `external.email` = `true`
+- [ ] Depois de ligar ou desligar provedor de login no painel do Cloud, revisar o diff (o assistente
+      da plataforma pode alterar código) e reverter o que não foi pedido
+- [ ] Histórico do repositório conectado integrado por merge (`--allow-unrelated-histories` na
+      primeira vez), sem force push
+- [ ] Teste de remix de verdade: remixar, chamar a tela de entrada, conferir linhas iniciais,
+      cadastro e painel

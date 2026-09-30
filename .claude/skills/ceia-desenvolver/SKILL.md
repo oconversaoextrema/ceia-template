@@ -20,7 +20,9 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
    - `VITE_SUPABASE_URL` e `SUPABASE_URL` = URL do projeto;
    - `VITE_SUPABASE_PUBLISHABLE_KEY` e `SUPABASE_PUBLISHABLE_KEY` = publishable key;
    - `SUPABASE_SERVICE_ROLE_KEY` = secret key (só servidor; nunca com prefixo `VITE_`).
-     O `.env` está no `.gitignore`.
+     O `.env` está no `.gitignore`. Segredos de desenvolvimento (a service role) ficam em
+     `.env.local`, que também fica fora do git; o `.env` do projeto publicado guarda só os
+     valores públicos e é versionado.
 4. **Schema**: aplique `supabase/migrations/*` em ordem, por um dos caminhos:
    - CLI: `npx supabase init` (cria `supabase/config.toml`; não mexe nas migrations),
      `npx supabase login`, `npx supabase link --project-ref <ref>`, `npx supabase db push`;
@@ -60,7 +62,8 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
   reaplica a lista exata de grants. O app a chama sozinho: no `beforeLoad` de `/` (no servidor,
   como visitante, no máximo a cada 10 minutos por instância, `src/lib/instalacao.ts`) e no
   `GarantirPerfil` da área logada quando a conta chega sem perfil ou sem organização. Falha
-  nunca bloqueia a tela.
+  nunca bloqueia a tela. O remix copia a estrutura, não os dados: linhas iniciais (linha única
+  de configuração, registro de exemplo) entram na seção 0 da função.
 - **Policy padrão de conteúdo** (a de `anotacoes`): select/update/delete quando
   `user_id = auth.uid()` **ou** `organizacao_id = minha_organizacao()`; insert só com
   `user_id = auth.uid()` e `organizacao_id` nulo ou igual à minha. `organizacao_id` nulo =
@@ -89,6 +92,10 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
    (`create or replace`, copiando a versão mais recente) com os grants da tabela, view ou função
    nova na seção 3 dela, e termine com `do $$ begin perform public.garantir_instalacao(); end $$;`.
    O que não estiver listado fica fechado para `anon`/`authenticated` depois de um reparo.
+   **Dado inicial** (linha única de configuração, registro de exemplo): seed na migration da
+   tabela e também na seção 0 do `garantir_instalacao()` (`if not exists (…) then insert …;
+   reparou := true; end if;`). Caso no `remix_reparo_test.sql`: apagar a linha antes do reparo e
+   conferir que ela voltou depois.
 4. **Teste**: acrescente os casos da tabela em `supabase/tests/rls_test.sql` (membro vê o da
    organização, removido só vê o seu, ninguém cria em nome de outro) e rode até dar `RLS OK`.
    Em `supabase/tests/remix_reparo_test.sql`, confira os privilégios da tabela nova depois do
@@ -231,4 +238,15 @@ Commits pequenos, mensagem em português dizendo o que muda.
 - [ ] `types.ts` igual ao schema; `npm run build` e `npm run lint` sem erro.
 - [ ] Cada tela testada em claro, escuro e 375 px; estados de carregamento, vazio e erro.
 - [ ] Primeira conta criada vira dona; cadastro fecha e reabre em Equipe.
+- [ ] Antes do primeiro cadastro no publicado e em cada remix de teste, conferir
+      `GET <SUPABASE_URL>/auth/v1/settings` com a publishable key: `external.email` precisa ser
+      `true`. Projeto criado sem autenticação pelo assistente da plataforma nasce com o e-mail
+      desligado.
+- [ ] Ligar ou desligar provedor de login no painel do Cloud dispara o assistente da plataforma,
+      que pode alterar código (ex.: botão de login social). Depois de mexer ali, revisar o diff e
+      reverter o que não foi pedido.
+- [ ] O repositório conectado não aceita reescrever histórico: integrar por merge
+      (`--allow-unrelated-histories` na primeira vez), nunca force push.
+- [ ] Teste de remix de verdade: remixar, chamar a tela de entrada, conferir as linhas iniciais,
+      o cadastro e o painel.
 - [ ] Checklist de `docs/ENTREGA.md` cumprido.

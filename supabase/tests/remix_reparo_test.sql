@@ -22,6 +22,9 @@ declare
 begin
   -- Base vazia só dentro desta transação (como no rls_test.sql).
   delete from public.organizacoes;
+  -- Modelo (o template não tem linha inicial): o remix copia a estrutura, não os dados.
+  -- Solução com linha única (ex.: configurações com id = 1) apaga-a aqui, antes do reparo:
+  --   delete from public.<tabela>;
 
   -- ── simula a cópia ──────────────────────────────────────────────────────
   drop trigger if exists on_auth_user_created on auth.users;
@@ -45,6 +48,11 @@ begin
   if not public.garantir_instalacao() then
     raise exception 'REPARO FALHOU: garantir_instalacao devolveu false com tudo quebrado';
   end if;
+
+  -- 0. linhas iniciais (modelo; o template não tem nenhuma). Solução com linha única
+  --    confere que a seção 0 a recriou:
+  --   select count(*) into n from public.<tabela> where id = 1;
+  --   if n <> 1 then raise exception 'REPARO FALHOU: linha de <tabela> não voltou'; end if;
 
   -- 1. trigger recriado
   select count(*) into n from pg_trigger
