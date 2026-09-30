@@ -94,7 +94,7 @@ gera um Worker (Cloudflare), então o código de servidor roda sem APIs do Node.
    O que não estiver listado fica fechado para `anon`/`authenticated` depois de um reparo.
    **Dado inicial** (linha única de configuração, registro de exemplo): seed na migration da
    tabela e também na seção 0 do `garantir_instalacao()` (`if not exists (…) then insert …;
-reparou := true; end if;`). Caso no `remix_reparo_test.sql`: apagar a linha antes do reparo e
+   reparou := true; end if;`). Caso no `remix_reparo_test.sql`: apagar a linha antes do reparo e
    conferir que ela voltou depois.
 4. **Teste**: acrescente os casos da tabela em `supabase/tests/rls_test.sql` (membro vê o da
    organização, removido só vê o seu, ninguém cria em nome de outro) e rode até dar `RLS OK`.
