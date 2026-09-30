@@ -118,6 +118,10 @@ sem ninguém precisar rodar nada. Todo objeto novo (tabela, view, função) entr
 
 A versão do template fica em `STARTER_VERSION` (e em `package.json`).
 
+- **0.3.0**: `garantir_instalacao()` ganha a seção 0 (linhas iniciais: o remix copia a estrutura,
+  não os dados), na migration `20260930130000_reparo_linhas_iniciais.sql`; modelo de teste da
+  linha inicial em `remix_reparo_test.sql`; manual com o passo "Dado inicial" e novos itens de
+  entrega (`auth/v1/settings`, provedor de login, merge sem force push, teste de remix).
 - **0.2.0**: tela de entrada com Magic Link e "Esqueceu a senha?", rota `/redefinir-senha`, erros
   do Auth em português (`src/lib/auth-errors.ts`) e auto-reparo da instalação
   (`garantir_instalacao()`, migration `20260929180000_auto_reparo_remix.sql`).
